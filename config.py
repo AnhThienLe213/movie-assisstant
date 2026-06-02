@@ -8,7 +8,7 @@ Thay đổi ở đây sẽ ảnh hưởng tất cả modules.
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────
-DATA_DIR = Path("data/ml-latest-small-filtered")
+DATA_DIR = Path("D:/AnhThienLe/Job/rcm_movie/data/ml-latest-small-filtered")
 
 # ── CF Engine ────────────────────────────────────────────────────
 CF_TOP_K_USERS  = 20   # số similar users lấy
