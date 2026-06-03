@@ -34,7 +34,7 @@ from __future__ import annotations
 from urllib import response
 
 # from src.claude_api       import call_claude
-from src.claude_api       import call_qwen
+from src.llm_api       import call_qwen, call_gemini
 from src.context_builder  import build_context
 from src.data_layer       import DataStore
 from src.explainability   import build_reasoning_trail
@@ -190,8 +190,9 @@ def run_pipeline(
 
     # ── Bước 7: Claude API ───────────────────────────────────────
     # response = call_claude(context, query)
-    # response = call_chatgpt(context, query)  # Dùng ChatGPT tạm vì Claude đang bị lỗi
+    # response = call_chatgpt(context, query)  
     response = call_qwen(context, query)   
+    # response = call_gemini(context, query)
     print(f"\n[Assistant]\n{response}")
 
     # ── Lưu vào Memory (chỉ khi không phải explain_previous) ────
