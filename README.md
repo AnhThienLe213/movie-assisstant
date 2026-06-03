@@ -87,7 +87,7 @@ export API_KEY=your_key_here
 # data/ml-latest-small-filtered/
 
 # 5. Chạy demo notebook
-jupyter notebook notebooks/demo.ipynb
+notebooks/demo.ipynb
 ```
 
 ---
