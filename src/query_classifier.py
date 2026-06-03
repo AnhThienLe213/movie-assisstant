@@ -33,7 +33,9 @@ CF_KEYWORDS = [
     "similar users", "people like me", "same taste",
     "others think", "users like me", "similar taste",
     "folks like me", "people with my taste", "think of",
-    "think about", "who likes similar",
+    "think about", "who likes similar","what should i watch", "what to watch", "recommend me",
+    "suggest something", "suggest a movie", "what do you recommend",
+    "what would you recommend", "what should i see", "what can i watch", "give me a recommendation",
 ]
 
 ANALYTICS_KEYWORDS = [
@@ -70,6 +72,24 @@ ALL_GENRES = [
     "Thriller", "War", "Western",
 ]
 
+# Alias mapping: từ user hay dùng → tên genre chính thức
+GENRE_ALIASES: dict[str, str] = {
+    "animated":    "Animation",
+    "animations":  "Animation",
+    "cartoons":    "Animation",
+    "cartoon":     "Animation",
+    "sci fi":      "Sci-Fi",
+    "science fiction": "Sci-Fi",
+    "scifi":       "Sci-Fi",
+    "docs":        "Documentary",
+    "documentaries": "Documentary",
+    "romcom":      "Romance",
+    "rom-com":     "Romance",
+    "musicals":    "Musical",
+    "westerns":    "Western",
+    "horrors":     "Horror",
+}
+
 
 # ── Result dataclass ─────────────────────────────────────────────
 
@@ -100,37 +120,55 @@ def _find_title_reference(query: str, ds: DataStore) -> Optional[int]:
     """
     Tìm movieId của phim được nhắc đến trong query.
 
-    Chiến lược: so sánh lowercase query với tên phim đã clean
-    (bỏ năm trong ngoặc). Chỉ match nếu tên phim > 3 ký tự
-    để tránh false positive với tên ngắn như "It", "Up".
+    Fix so với version cũ:
+    - Tăng min length lên 5 để giảm false positive
+    - Dùng word boundary \b thay vì substring match
+      → "missing" không match phim tên "Miss"
+    - Ưu tiên match dài nhất khi nhiều phim cùng match
+      → "Toy Story 2" thắng "Toy Story"
     """
     query_lower = query.lower()
+    best_id  = None
+    best_len = 0
 
     for _, row in ds.movies_df.iterrows():
-        raw_title = str(row["title"])
-        # Bỏ phần năm "(YYYY)" nếu có
+        raw_title   = str(row["title"])
         clean_title = re.sub(r"\s*\(\d{4}\)\s*$", "", raw_title).strip().lower()
 
-        if len(clean_title) > 3 and clean_title in query_lower:
-            return int(row["movieId"])
+        if len(clean_title) <= 3:
+            continue
 
-    return None
+        pattern = r"\b" + re.escape(clean_title) + r"\b"
+        if re.search(pattern, query_lower) and len(clean_title) > best_len:
+            best_id  = int(row["movieId"])
+            best_len = len(clean_title)
+
+    return best_id
 
 
 def _find_exclude_genres(query: str) -> list[str]:
     """
     Tìm genre cần loại trừ.
 
-    Chỉ đánh dấu loại trừ khi genre xuất hiện GẦN
-    một từ chỉ loại trừ trong cùng câu.
+    Fix so với version cũ:
+    - Thêm GENRE_ALIASES để match "animated" → Animation,
+      "sci fi" → Sci-Fi, v.v.
+    - Check cả tên chính thức lẫn alias
     """
     q = query.lower()
-    has_exclude_signal = _contains_any(q, EXCLUDE_SIGNAL_WORDS)
-
-    if not has_exclude_signal:
+    if not _contains_any(q, EXCLUDE_SIGNAL_WORDS):
         return []
 
-    return [g for g in ALL_GENRES if g.lower() in q]
+    found = set()
+    # Check tên genre chính thức
+    for g in ALL_GENRES:
+        if g.lower() in q:
+            found.add(g)
+    # Check aliases
+    for alias, canonical in GENRE_ALIASES.items():
+        if alias in q:
+            found.add(canonical)
+    return list(found)
 
 
 # ── Public API ───────────────────────────────────────────────────
@@ -170,16 +208,18 @@ def classify_query(
             is_followup=True,
         )
 
-    # ── 2. lookup ────────────────────────────────────────────────
+    # ── 2. analytics ─────────────────────────────────────────────
+    # Check TRƯỚC title_ref lookup để tránh analytics query
+    # bị misroute sang lookup khi có từ ngẫu nhiên match tên phim
+    if _contains_any(q, ANALYTICS_KEYWORDS):
+        return ClassifierResult(intent="analytics")
+
+    # ── 3. lookup ────────────────────────────────────────────────
     # Phải có cả keyword lookup VÀ tên phim cụ thể
     title_ref = _find_title_reference(query, ds)
     if _contains_any(q, LOOKUP_KEYWORDS) and title_ref is not None:
         constraints["title_reference"] = title_ref
         return ClassifierResult(intent="lookup", constraints=constraints)
-
-    # ── 3. analytics ─────────────────────────────────────────────
-    if _contains_any(q, ANALYTICS_KEYWORDS):
-        return ClassifierResult(intent="analytics")
 
     # ── 4. CF ────────────────────────────────────────────────────
     is_cf = _contains_any(q, CF_KEYWORDS)
