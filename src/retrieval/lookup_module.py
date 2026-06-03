@@ -13,7 +13,7 @@ Dùng cho các query dạng:
 - Lookup Module: tra cứu phim CỤ THỂ đã biết tên → trả về 1 kết quả
 
 Quan trọng — grounding rule:
-    Claude chỉ được dùng plot từ dataset để giải thích.
+    LLM chỉ được dùng plot từ dataset để giải thích.
     KHÔNG được dùng LLM knowledge về phim dù phim đó rất nổi tiếng.
     Nếu phim không có trong dataset → trả về error, không hallucinate.
 
@@ -48,7 +48,7 @@ def lookup_module(movie_id: int, ds: DataStore) -> dict:
 
     Lưu ý:
         Plot được trả về đầy đủ (không truncate) để
-        Claude có đủ thông tin để giải thích nội dung.
+        LLM có đủ thông tin để giải thích nội dung.
         Context Builder sẽ quyết định truncate bao nhiêu
         cho phù hợp với token budget.
     """
@@ -77,7 +77,7 @@ def lookup_module(movie_id: int, ds: DataStore) -> dict:
         "title":           str(row["title"]),
         "year":            str(row.get("year", "N/A")),
         "genres":          str(row.get("genres", "")),
-        "plot":            str(row["plot"]),          # full plot cho Claude
+        "plot":            str(row["plot"]),          # full plot cho LLM
         "avg_rating":      round(avg_rating, 2) if avg_rating is not None else None,
         "n_ratings":       n_ratings,
         "tags":            list(set(tags))[:10],      # deduplicated, max 10

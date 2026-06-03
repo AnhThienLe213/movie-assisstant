@@ -128,7 +128,7 @@ User Input (userId + query)
 └─────────────────────┬───────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────┐
-│             Claude API                       │
+│             LLM API                       │
 │  System: "CHỈ cite từ REASONING TRAIL"      │
 │  → Recommendation + cited explanation       │
 └─────────────────────────────────────────────┘

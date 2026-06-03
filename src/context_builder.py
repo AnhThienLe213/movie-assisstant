@@ -2,7 +2,7 @@
 context_builder.py
 ------------------
 Bước 6 trong pipeline: đóng gói tất cả thông tin thành
-prompt context gửi vào Claude API.
+prompt context gửi vào LLM API.
 
 Nhiệm vụ chính:
     1. Build user profile summary (~200 tokens)
@@ -16,10 +16,10 @@ Token budget (tổng ~1250 tokens để an toàn với 4K context):
     Candidates:      ~150 tokens × 5 = 750 tokens
     Total:           ~1250 tokens
 
-Tại sao không gửi toàn bộ history vào Claude:
+Tại sao không gửi toàn bộ history vào LLM:
     - Memory chỉ giữ reasoning trail của turn trước
     - Không cần gửi toàn bộ conversation history
-    - Tránh token bloat — chỉ gửi đúng những gì Claude cần
+    - Tránh token bloat — chỉ gửi đúng những gì LLM cần
       để trả lời query hiện tại
 """
 
@@ -114,7 +114,7 @@ def build_context(
     previous_turn:    Optional[Turn] = None,
 ) -> str:
     """
-    Đóng gói tất cả thành prompt context cho Claude.
+    Đóng gói tất cả thành prompt context cho LLM.
 
     Cấu trúc output:
         [USER PROFILE]
@@ -140,7 +140,7 @@ def build_context(
                          (chỉ dùng khi intent=explain_previous)
 
     Returns:
-        Formatted string, sẵn sàng để gửi vào Claude API
+        Formatted string, sẵn sàng để gửi vào LLM API
         dưới dạng user message (trước query)
     """
     sections = []

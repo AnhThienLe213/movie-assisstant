@@ -13,7 +13,7 @@ Tại sao cần Conversation Memory:
 
 Điều Memory KHÔNG làm:
     - Không lưu toàn bộ conversation history như ChatGPT
-    - Không gửi history vào Claude (tránh token waste)
+    - Không gửi history vào LLM (tránh token waste)
     - Chỉ lưu đủ để trả lời "why" về turn liền trước
 
 Điểm yếu đã biết:
@@ -37,7 +37,7 @@ class Turn:
     Lưu thông tin của một turn trong conversation.
 
     reasoning_trail: text đã format từ Explainability Layer
-        → đây là thứ Claude cite khi user hỏi "why"
+        → đây là thứ LLM cite khi user hỏi "why"
     retrieval_raw: dict thô từ Retrieval Layer
         → giữ lại để Explainability Layer có thể
            đào sâu hơn nếu cần

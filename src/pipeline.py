@@ -11,7 +11,7 @@ Nó kết nối 7 bước theo đúng thứ tự:
     3. Conversation Memory → lưu / đọc reasoning trail
     4. Explainability Layer → chuyển raw results → trail
     5. Context Builder    → đóng gói prompt
-    6. Claude API         → gọi Claude với grounding
+    6. LLM API         → gọi LLM với grounding
     7. Save to Memory     → lưu turn hiện tại
 
 Lý do tách pipeline.py khỏi các modules khác:
@@ -26,7 +26,7 @@ Ví dụ flow với query "What should I watch tonight?":
     Memory      → ghi turn mới
     Explainer   → "User 42 (sim=0.87) rated X 5.0..."
     Context     → [USER PROFILE] + [REASONING TRAIL]
-    Claude      → "Based on User 42 who has similar taste..."
+    LLM         → "Based on User 42 who has similar taste..."
     Memory.save → lưu trail để explain_previous dùng sau
 """
 
@@ -101,7 +101,7 @@ def run_pipeline(
         verbose: nếu True → print intermediate results để debug
 
     Returns:
-        Response string từ Claude (có citations từ data)
+        Response string từ LLM (có citations từ data)
     """
     print(f"\n{'='*60}")
     print(f"User {user_id}: \"{query}\"")
@@ -188,7 +188,7 @@ def run_pipeline(
     if verbose:
         print(f"[Context preview]\n{context[:600]}...")
 
-    # ── Bước 7: Claude API ───────────────────────────────────────
+    # ── Bước 7: LLM API ───────────────────────────────────────
     # response = call_claude(context, query)
     # response = call_chatgpt(context, query)  
     response = call_qwen(context, query)   

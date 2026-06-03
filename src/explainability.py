@@ -2,15 +2,15 @@
 explainability.py
 -----------------
 Bước 5 trong pipeline: chuyển raw retrieval results thành
-reasoning trail — text có cấu trúc mà Claude sẽ cite.
+reasoning trail — text có cấu trúc mà LLM sẽ cite.
 
 Tại sao layer này bắt buộc chạy với MỌI intent:
-    Không có layer này, Claude nhận được số thô từ retrieval
+    Không có layer này, nhận được số thô từ retrieval
     ([(movieId=123, score=4.6), ...]) và không biết cite gì
-    → Claude tự bịa lý do từ LLM knowledge
+    → LLM tự bịa lý do từ LLM knowledge
     → Vi phạm requirement 3 của đề bài
 
-    Layer này là "firewall" giữa raw data và Claude:
+    Layer này là "firewall" giữa raw data và LLM:
     - Input:  raw dict từ CF / Content / Analytics / Lookup
     - Output: text trail rõ ràng, có thể cite từng câu
 
@@ -18,26 +18,26 @@ Reasoning trail làm được gì:
     CF trail:
         "User 42 (sim=0.87, 23 phim chung) rated Inception 5.0
          3/3 similar users rate ≥ 4.0 → predicted score: 4.6"
-    → Claude cite: "Dựa trên User 42 (similarity=0.87)..."
+    → LLM cite: "Dựa trên User 42 (similarity=0.87)..."
 
     Content trail:
         "matched terms: 'psychological', 'twist ending', 'thriller'
          Top match: Gone Girl (score=0.73)"
-    → Claude cite: "Plot khớp với query ở các từ: psychological, twist..."
+    → LLM cite: "Plot khớp với query ở các từ: psychological, twist..."
 
     Analytics trail:
         "Action: 45 phim (avg 4.1) — top genre của bạn
          Documentary: 3 phim (-18% vs dataset) — blind spot"
-    → Claude cite: "Bạn đã rate 45 phim Action với avg 4.1..."
+    → LLM cite: "Bạn đã rate 45 phim Action với avg 4.1..."
 
     Lookup trail:
         "Full plot từ dataset: [text]
          74 users rated, avg = 4.2"
-    → Claude cite: "Theo plot trong dataset: ..."
+    → LLM cite: "Theo plot trong dataset: ..."
 
 Confidence flags:
     Nếu data thưa → thêm cảnh báo vào trail
-    → Claude được phép (và phải) thừa nhận uncertainty
+    → LLM được phép (và phải) thừa nhận uncertainty
 """
 
 from __future__ import annotations
@@ -239,7 +239,7 @@ def build_lookup_trail(result: dict) -> str:
     if tags:
         lines.append(f"User-generated tags: {', '.join(tags)}")
 
-    # Full plot — Claude sẽ dùng để giải thích nội dung
+    # Full plot — LLM sẽ dùng để giải thích nội dung
     lines.append(f"\nFull plot from dataset:\n{result['plot']}")
 
     return "\n".join(lines)
@@ -256,7 +256,7 @@ def build_reasoning_trail(
     Entry point duy nhất của Explainability Layer.
 
     Dispatch đến đúng trail builder theo intent.
-    Luôn được gọi trước khi build context cho Claude.
+    Luôn được gọi trước khi build context cho LLM.
 
     Args:
         intent:           intent từ Query Classifier
@@ -265,7 +265,7 @@ def build_reasoning_trail(
 
     Returns:
         Formatted reasoning trail string, sẵn sàng để
-        nhúng vào Claude prompt dưới [REASONING TRAIL]
+        nhúng vào LLM prompt dưới [REASONING TRAIL]
     """
     # Error case — retrieval thất bại
     if "error" in retrieval_result:

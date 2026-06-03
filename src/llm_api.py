@@ -1,16 +1,16 @@
 """
 claude_api.py
 -------------
-Bước 7 trong pipeline: gọi Claude API với context
+Bước 7 trong pipeline: gọi LLM API với context
 đã được đóng gói bởi Context Builder.
 
 System prompt là "firewall" quan trọng nhất:
-    Enforce rằng Claude CHỈ được cite từ [REASONING TRAIL]
+    Enforce rằng LLM CHỈ được cite từ [REASONING TRAIL]
     và KHÔNG được dùng LLM knowledge về phim.
 
     Tại sao cần enforce chặt:
         Dataset chứa phim từ 1903-2014 — LLM biết tất cả.
-        Nếu không có system prompt chặt, Claude sẽ trả lời
+        Nếu không có system prompt chặt, LLM sẽ trả lời
         "Inception là phim hay vì Christopher Nolan nổi tiếng..."
         thay vì "User 42 (similarity=0.87) rated Inception 5.0"
         → Vi phạm requirement 3 của đề bài.
@@ -65,7 +65,7 @@ STRICT GROUNDING RULES:
 
 # def call_claude(context: str, query: str) -> str:
 #     """
-#     Gọi Claude API với context và query của user.
+#     Gọi LLM API với context và query của user.
 
 #     Args:
 #         context: formatted string từ Context Builder
@@ -73,7 +73,7 @@ STRICT GROUNDING RULES:
 #         query:   câu hỏi gốc của user
 
 #     Returns:
-#         Response string từ Claude
+#         Response string từ LLM
 #         Nếu API key không có → trả về placeholder message
 
 #     Message format:
@@ -82,13 +82,13 @@ STRICT GROUNDING RULES:
 #         [USER QUERY]
 #         <query>
 
-#     Claude nhìn thấy context trước query → biết phải
+#     LLM nhìn thấy context trước query → biết phải
 #     dựa vào data nào trước khi trả lời.
 #     """
 #     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 #     if not api_key:
 #         return (
-#             "[Claude API key not set]\n"
+#             "[LLM API key not set]\n"
 #             "Set environment variable: export ANTHROPIC_API_KEY=your_key\n\n"
 #             f"Context that would be sent:\n{context[:500]}..."
 #         )
